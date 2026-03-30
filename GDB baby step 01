@@ -1,0 +1,189 @@
+PicoCTF  GDB Baby Step 1 Writeup
+Category: Reverse Engineering  
+Difficulty: Beginner  
+Tool Used: GDB (GNU Debugger)  
+Flag: picoCTF{549698}
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+What is this challenge about?
+
+This challenge gives you a compiled binary file (a program). You can't see the source code, you have to look (inside) it while it runs using a tool called (GDB).
+
+The goal is to find a specific value stored in a CPU register called `eax` when the `main` function runs.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ Tool: GDB (GNU Debugger)
+
+Think of GDB like pressing (pause) on a running program and inspecting what's happening inside.
+
+Normally a program just runs and finishes, you can't see anything. 
+With GDB you can:
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| What GDB lets you do|                 | Why it's useful |
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| Pause the program at any point        | Look inside before it finishes 
+| Step through instructions one by one  | Understand exactly what happens 
+| Read CPU registers (like `eax`, `ebx`)| These hold important values while the program runs 
+| Read memory                           | See what data is stored where 
+| Change values on the fly              | Modify behaviour while running 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+What is a register? 
+A register is a tiny, super-fast storage slot (inside the CPU itself). When your program does math or moves data around, it uses registers. `eax` is one of the most common ones, it usually holds a function's (return value).
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Step-by-Step Solution
+
+ Step 1 — Download the challenge file
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+bash
+wget https://artifacts.picoctf.net/c/86/debugger0_a
+```
+
+`wget` is a Linux command that (downloads a file from the internet) directly into your terminal.  
+ Every PicoCTF challenge gives you a link to download the binary, copy that link and paste it after `wget`.  
+ You don't need a browser, you do it all from the terminal.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ Step 2 — See what files you have
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+```bash
+ls
+```
+
+Output:
+```
+README.txt   debugger0_a   debugger0_a.1   debugger0_a.2
+```
+
+ The `.1` and `.2` copies appeared because the file was downloaded multiple times. The real file we need is `debugger0_a`.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ Step 3 — Open the binary in GDB
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+```bash
+gdb debugger0_a
+```
+
+This loads the program into GDB without running it yet. You'll see GDB start up and show you the `(gdb)` prompt, that means you're inside GDB now.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ Step 4 — List all functions in the program
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+```bash
+info functions
+```
+
+Output (simplified):
+```
+0x0000000000001129  main
+0x0000000000001140  __libc_csu_init
+
+ This shows every function inside the binary. We can see `main` is here, that's where a C program always starts.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ Step 5 — Disassemble the main function
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+```bash
+disas main
+```
+
+ `disas` is short for (disassemble) it converts the raw binary code into human-readable (assembly instructions), so we can read what the program actually does.
+
+Output:
+
+Dump of assembler code for function main:
+   0x0000000000001129 <+0>:    endbr64
+   0x000000000000112d <+4>:    push   %rbp
+   0x000000000000112e <+5>:    mov    %rsp,%rbp
+   0x0000000000001131 <+8>:    mov    %edi,-0x4(%rbp)
+   0x0000000000001134 <+11>:   mov    %rsi,-0x10(%rbp)
+   0x0000000000001138 <+15>:   mov    $0x86342,%eax      ← THIS LINE
+   0x000000000000113d <+20>:   pop    %rbp
+   0x000000000000113e <+21>:   ret
+End of assembler dump.
+
+
+ Look at `<+15>`: the instruction `mov $0x86342,%eax` is moving the value `0x86342` into the `eax` register.  
+ The challenge hint says to find what's in `eax` we found it: `0x86342` (in hexadecimal).
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ Step 6 — Convert hex to decimal
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+```bash
+p/d 0x86342
+```
+
+ `p` = print  
+ `/d` = in decimal format  
+ Together: print this value as a decimal number
+
+Output:
+
+$1 = 549698
+```
+
+`0x86342` in hexadecimal = 549698 in decimal.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Flag: 
+
+picoCTF{549698}
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ Quick Solution (Short Version)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+If you just want the answer fast, here are the only 3 commands you need:
+
+```bash
+gdb ./debugger0_a
+disas main
+p/d 0x86342
+```
+
+Or if you want to actually run the program and read `eax` live from the register:
+
+```bash
+gdb ./debugger0_a
+break main
+run
+stepi
+stepi
+stepi
+p/d $eax
+```
+
+`stepi` = **step one instruction** at a time  
+ `$eax` = read the value currently inside the eax register
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ Key Concepts Learned
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| Concept |                         | What it means |
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| Binary / Executable               | A compiled program the CPU can run directly 
+| GDB                               | A tool to pause and inspect a running program 
+| Disassembly                       | Converting binary code into readable assembly instructions 
+| Assembly                          | Low-level instructions the CPU follows (like `mov`, `push`, `ret`) 
+| Register (eax)                    | A tiny storage slot inside the CPU 
+| Hexadecimal                       | A base-16 number system used in low-level programming (0x prefix) 
+| p/d                               | GDB command to print a value as a decimal number 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+ 🔗 Resources to Learn More
+
+- [GDB Cheat Sheet](https://darkdust.net/files/GDB%20Cheat%20Sheet.pdf)
+- [PicoCTF Practice](https://picoctf.org)
+- [Intro to x86 Assembly](https://cs.lmu.edu/~ray/notes/x86assembly/)
+
+
+Writeup by: [Sharjeel Ahmad]  
+Platform: PicoCTF  
+Date: 26-3-2026
