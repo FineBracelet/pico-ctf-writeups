@@ -1,0 +1,100 @@
+CTF Writeup: Strings It
+picoCTF | Reverse Engineering Challenge
+
+
+-----------------------------------------------------------
+WHAT WAS THIS CHALLENGE?
+-----------------------------------------------------------
+
+A binary file was provided. Hidden somewhere inside it was the flag. The challenge was to extract readable text from the binary and find the flag within it.
+
+The key insight: binary files often contain human-readable strings embedded inside them. There are Linux tools built exactly for extracting those strings.
+
+
+-----------------------------------------------------------
+STEP 1 - Download the File
+-----------------------------------------------------------
+
+Command used: wget [file URL]
+
+What happened:
+wget downloads a file from a URL directly into your current directory. After running it, the file appeared when listing the directory with ls.
+
+Remember: wget URL downloads any file from the internet straight to your terminal.
+
+
+-----------------------------------------------------------
+STEP 2 - Inspect the Raw File
+-----------------------------------------------------------
+
+Command used: cat strings
+
+What happened:
+Running cat on the binary file printed thousands of unreadable characters — symbols, garbage, and noise. This is normal for binary files. cat just dumps everything raw with no filtering.
+
+This told us the file is binary and we need a smarter tool to extract the useful parts.
+
+Remember: cat works great for text files. For binary files, you need strings instead.
+
+
+-----------------------------------------------------------
+STEP 3 - Extract Readable Text
+-----------------------------------------------------------
+
+Command used: strings strings
+
+What happened:
+The first word strings is the Linux command. The second word strings is the filename. The strings command scans through a binary file and pulls out any sequences of readable characters, ignoring all the binary noise.
+
+This dumped a long list of human-readable text that was hidden inside the binary.
+
+Remember: strings [filename] extracts all readable text from any file, including binaries.
+
+
+-----------------------------------------------------------
+STEP 4 - Find the Flag
+-----------------------------------------------------------
+
+Command used: strings strings | grep picoCTF
+
+What happened:
+The output from strings was too long to search through manually. Piping it into grep picoCTF told Linux to only show lines containing the word picoCTF, which is how all picoCTF flags start.
+
+This immediately filtered the output down to just the flag.
+
+The pipe symbol | takes the output of one command and feeds it as input to the next. This is one of the most powerful patterns in Linux.
+
+Remember: command1 | command2 chains commands together. grep [word] filters output to only lines containing that word.
+
+
+-----------------------------------------------------------
+QUICK REFERENCE
+-----------------------------------------------------------
+
+wget URL                          Download a file from the internet
+cat filename                      Print file contents (use for text files)
+strings filename                  Extract readable text from binary files
+strings filename | grep picoCTF   Find the flag inside extracted strings
+grep word                         Filter output to lines containing that word
+
+
+-----------------------------------------------------------
+THE FLAG
+-----------------------------------------------------------
+
+picoCTF{5tRIng5_1T_A1b9ECAa}
+
+
+-----------------------------------------------------------
+KEY TAKEAWAYS
+-----------------------------------------------------------
+
+Binary files are not just unreadable garbage. They often contain readable strings embedded inside them, including flags in CTF challenges.
+
+The strings command is one of the first tools you should reach for in any reverse engineering challenge. Always try it early.
+
+grep is your best friend for searching through large outputs. Instead of reading thousands of lines, pipe into grep and filter instantly.
+
+The pipe symbol | is one of the most powerful concepts in Linux. Chaining commands together lets you build powerful one-liners that would otherwise take many steps.
+
+wget is how you download files in the terminal without opening a browser.
