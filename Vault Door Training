@@ -1,0 +1,82 @@
+CTF Writeup: Vault Door Training
+picoCTF | Reverse Engineering Challenge
+
+
+-----------------------------------------------------------
+WHAT WAS THIS CHALLENGE?
+-----------------------------------------------------------
+
+A Java source code file was provided called VaultDoorTraining.java. The goal was to read the code, understand what it was doing, and extract the password hidden inside it. No compiling or running required — the answer was sitting in plain sight inside the source code.
+
+
+-----------------------------------------------------------
+STEP 1 - Download the File
+-----------------------------------------------------------
+
+Command used: wget [file URL]
+
+What happened:
+wget downloaded the Java file into the current directory. ls confirmed it was there as VaultDoorTraining.java.
+
+Remember: wget URL downloads any file from the internet straight into your terminal.
+
+
+-----------------------------------------------------------
+STEP 2 - Read the File
+-----------------------------------------------------------
+
+Command used: cat VaultDoorTraining.java
+
+What happened:
+cat printed the entire Java source code to the terminal. Reading through it revealed the following:
+
+The code asks the user to enter a vault password. It then checks the input against a hardcoded password inside the checkPassword function at the bottom of the file.
+
+The developer even left a comment admitting this was a bad idea:
+"The password is below. Is it safe to put the password in the source code?"
+
+The password was stored directly in the code as a plain string.
+
+Remember: always read source code carefully from top to bottom. Developers sometimes leave passwords, keys, or flags hardcoded directly in the code.
+
+
+-----------------------------------------------------------
+STEP 3 - Extract the Flag
+-----------------------------------------------------------
+
+What we found inside the code:
+
+return password.equals("w4rm1ng_Up_w1tH_jAv4_000HPpgh7Ph");
+
+The string inside the equals() function is the password. Wrapping it in picoCTF{} gives the full flag.
+
+Remember: in Java, .equals() compares two strings. Whatever is inside the quotes is the exact value being checked against.
+
+
+-----------------------------------------------------------
+QUICK REFERENCE
+-----------------------------------------------------------
+
+wget URL                       Download the file
+cat VaultDoorTraining.java     Read the source code
+Read checkPassword()           Find the hardcoded password inside
+
+
+-----------------------------------------------------------
+THE FLAG
+-----------------------------------------------------------
+
+picoCTF{w4rm1ng_Up_w1tH_jAv4_000HPpgh7Ph}
+
+
+-----------------------------------------------------------
+KEY TAKEAWAYS
+-----------------------------------------------------------
+
+Source code review is one of the most important skills in reverse engineering. When you are given source code, read it carefully before doing anything else.
+
+Hardcoded passwords in source code are a real security vulnerability. This challenge is based on a mistake developers actually make in real life.
+
+You do not always need to run a program to find the flag. Sometimes the answer is right there in the code waiting to be read.
+
+The checkPassword or similar functions are always worth looking at closely in reverse engineering challenges. That is usually where the comparison happens and where secrets are hidden.
