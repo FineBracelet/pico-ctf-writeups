@@ -1,0 +1,100 @@
+CTF Writeup: Crackme-py
+picoCTF | Reverse Engineering Challenge
+
+
+-----------------------------------------------------------
+WHAT WAS THIS CHALLENGE?
+-----------------------------------------------------------
+
+A Python file was provided called crackme_gen.py. It contained an encrypted string called bezos_cc_secret and a decoding function using ROT47. The decoding function existed in the file but was never actually called on the secret. The goal was to decode the secret and reveal the flag.
+
+
+-----------------------------------------------------------
+STEP 1 - Read the File
+-----------------------------------------------------------
+
+Command used: cat crackme_gen.py
+
+What happened:
+Reading the file revealed two main things:
+
+First, an encrypted string stored in a variable:
+bezos_cc_secret = "A:4@r%uL`>0c0Abc?FE0g`_47fgaagg6ffN"
+
+Second, a decode_secret function that uses ROT47 to decode any string passed to it. However the function was never called with bezos_cc_secret anywhere in the file. The file only called choose_greatest() at the bottom.
+
+Remember: always read the full file before doing anything. Understanding what the code does tells you what you need to change or add.
+
+
+-----------------------------------------------------------
+STEP 2 - Understand ROT47
+-----------------------------------------------------------
+
+What is ROT47:
+ROT47 works the same way as ROT13 but instead of only shifting letters by 13, it shifts all 94 printable ASCII characters by 47 positions. This includes letters, numbers, and symbols.
+
+Just like ROT13, ROT47 is self-reversing. Applying it once encodes. Applying it again decodes. The decode_secret function in the file handles this automatically.
+
+Remember: ROT ciphers are always self-reversing. The same operation encodes and decodes.
+
+
+-----------------------------------------------------------
+STEP 3 - Fix and Run the Decoder
+-----------------------------------------------------------
+
+What was done:
+The original file had a bug in the decode_secret function. It used print() inside the loop instead of building and returning the decoded string properly. The function also needed to handle characters not found in the alphabet.
+
+A corrected version of the decoder was written and run using python3:
+
+bezos_cc_secret = "A:4@r%uL`>0c0Abc?FE0g`_47fgaagg6ffN"
+
+alphabet = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+
+def decode_secret(secret):
+    rotate_const = 47
+    decoded = ""
+    for c in secret:
+        index = alphabet.find(c)
+        if index == -1:
+            decoded += c
+            continue
+        original_index = (index + rotate_const) % len(alphabet)
+        decoded += alphabet[original_index]
+    return decoded
+
+print(decode_secret(bezos_cc_secret))
+
+Command used to run it: python3 crackme_gen.py
+
+Remember: when a decoding function exists but is not being called, you either add a call to it or write a small script that uses it directly.
+
+
+-----------------------------------------------------------
+QUICK REFERENCE
+-----------------------------------------------------------
+
+cat crackme_gen.py          Read the source code and understand the logic
+python3 filename.py         Run a Python file
+ROT47                       Shifts all 94 printable ASCII characters by 47 positions
+Self-reversing cipher       Apply once to encode, apply again to decode
+
+
+-----------------------------------------------------------
+THE FLAG
+-----------------------------------------------------------
+
+picoCTF{1m_4_p34nut_810cf782288e77}
+
+
+-----------------------------------------------------------
+KEY TAKEAWAYS
+-----------------------------------------------------------
+
+When source code has a decoding function but never calls it, that is your hint. You need to trigger that function yourself either by editing the file or writing your own script.
+
+ROT47 is an extension of ROT13. Same concept, bigger character set. Both are self-reversing.
+
+Reading code carefully before running anything saves a lot of time. The solution was already written inside the file. You just had to understand it and use it correctly.
+
+Bugs in provided code are sometimes intentional in CTF challenges. Part of the challenge is identifying what is wrong and fixing it.
