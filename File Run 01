@@ -1,0 +1,74 @@
+CTF Writeup: File Run 1
+picoCTF | General Skills Challenge
+
+
+-----------------------------------------------------------
+WHAT WAS THIS CHALLENGE?
+-----------------------------------------------------------
+
+A binary executable file was provided. The goal was simply to run it and get the flag. The catch is that downloaded files on Linux are not executable by default. You have to give them permission to run first.
+
+
+-----------------------------------------------------------
+STEP 1 - Download the File
+-----------------------------------------------------------
+
+Command used: wget [file URL]
+
+What happened:
+wget downloaded the binary file into the current directory. After this, ls confirmed the file was there.
+
+Remember: wget URL downloads any file from the internet straight into your terminal.
+
+
+-----------------------------------------------------------
+STEP 2 - Make the File Executable
+-----------------------------------------------------------
+
+Command used: chmod +x run
+
+What happened:
+By default, files downloaded from the internet are not allowed to execute on Linux. chmod is the command that changes file permissions. The +x flag adds execute permission, telling Linux that this file is allowed to be run as a program.
+
+Without this step, trying to run the file would give a permission denied error.
+
+Remember: chmod +x filename makes any file executable. You need this before running downloaded programs.
+
+
+-----------------------------------------------------------
+STEP 3 - Run the File
+-----------------------------------------------------------
+
+Command used: ./run
+
+What happened:
+The ./ tells Linux to run the file from the current directory. Without it, Linux would look for the command in its system paths and not find it. The program ran and printed the flag directly.
+
+Remember: ./filename runs an executable that is in your current directory.
+
+
+-----------------------------------------------------------
+QUICK REFERENCE
+-----------------------------------------------------------
+
+wget URL          Download a file from the internet
+chmod +x run      Give the file permission to execute
+./run             Run the file from the current directory
+
+
+-----------------------------------------------------------
+THE FLAG
+-----------------------------------------------------------
+
+picoCTF{U51N6_Y0Ur_F1r57_F113_e5559d46}
+
+
+-----------------------------------------------------------
+KEY TAKEAWAYS
+-----------------------------------------------------------
+
+Linux does not let you run files by default. This is a security feature. You have to explicitly give a file execute permission using chmod +x before it can run.
+
+The ./ before a filename means run this file from here. You will use this constantly when running programs in CTF challenges.
+
+Some challenges are simple on purpose. The lesson here is not the flag itself but learning the workflow of downloading, permissioning, and running executables in Linux.
