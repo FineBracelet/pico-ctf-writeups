@@ -1,0 +1,147 @@
+CTF Writeup: Transformation
+picoCTF | Reverse Engineering Challenge
+
+
+-----------------------------------------------------------
+WHAT WAS THIS CHALLENGE?
+-----------------------------------------------------------
+
+An encoded file called enc was provided. Opening it showed strange unreadable characters that looked like Chinese or other non-Latin symbols. The goal was to figure out the encoding and convert it back to readable ASCII text to reveal the flag.
+
+The key concept: the file used UTF-16 encoding instead of the usual UTF-8 or ASCII. Each character was stored as 16 bits instead of 8, which is why it looked like gibberish.
+
+
+-----------------------------------------------------------
+STEP 1 - Download the File
+-----------------------------------------------------------
+
+Command used: wget https://challenge-files.picoctf.net/c_wily_courier/2f1e804dd3a62057e8693c0d543175b1ac8a2ea8becd1c658cc27b23f2385289/enc
+
+What happened:
+wget downloaded the encoded file into the current directory with the filename enc.
+
+Remember: wget URL downloads any file from the internet directly into your terminal.
+
+
+-----------------------------------------------------------
+STEP 2 - Verify the File is There
+-----------------------------------------------------------
+
+Command used: ls
+
+What happened:
+ls listed the files in the current directory and confirmed enc was present and ready to work with.
+
+Remember: always use ls to confirm your download worked before proceeding.
+
+
+-----------------------------------------------------------
+STEP 3 - Read the Raw File
+-----------------------------------------------------------
+
+Command used: cat enc
+
+What happened:
+The file contents looked like unreadable symbols and strange characters. This confirmed the file was encoded and not plain ASCII. The weird characters were actually UTF-16 encoded text where every two bytes represent one character instead of one byte per character.
+
+This is called encoding — transforming readable text into a different format so it cannot be read directly.
+
+Remember: if cat gives you unreadable garbage, that is a clue about the encoding. Do not panic, just figure out what encoding was used.
+
+
+-----------------------------------------------------------
+STEP 4 - Open Python to Decode
+-----------------------------------------------------------
+
+Command used: python3
+
+What happened:
+Python was opened in interactive mode to write a short decoding script step by step. Python has built-in tools for handling different text encodings.
+
+Remember: python3 opens an interactive Python shell where you can type and run code line by line.
+
+
+-----------------------------------------------------------
+STEP 5 - Read the File into a Variable
+-----------------------------------------------------------
+
+Command typed in Python: dumbIThere = open("enc").read()
+
+What happened:
+This opened the file enc, read all its contents, and saved them into a variable called dumbIThere. The variable now held the entire encoded text ready for processing.
+
+Breaking it down:
+open("enc") opens the file
+.read() reads all its contents
+dumbIThere = saves it into a variable
+
+Remember: open("filename").read() is the standard Python way to read a file into a variable.
+
+
+-----------------------------------------------------------
+STEP 6 - Create an Empty Variable for the Decoded Output
+-----------------------------------------------------------
+
+Command typed in Python: decoded = ''
+
+What happened:
+An empty string variable called decoded was created. This will be filled with the decoded characters one by one in the next step.
+
+Note: use single quotes twice with nothing between them. This is an empty string, not a space.
+
+Remember: always prepare a storage variable before building output in a loop.
+
+
+-----------------------------------------------------------
+STEP 7 - Decode UTF-16 to ASCII
+-----------------------------------------------------------
+
+Commands typed in Python:
+
+for a in dumbIThere:
+  decoded = a.encode('utf-16be').decode('ascii')
+  print(decoded)
+
+What happened:
+This loop went through every character in the encoded file one at a time. For each character it encoded it as UTF-16 big endian (utf-16be) and then decoded that as ASCII, converting the 16-bit characters back into standard readable text. The flag appeared character by character.
+
+Important: the two spaces before decoded and print are required in Python. Python uses indentation to know what is inside the loop. Without the spaces it will throw an error.
+
+Remember: in Python, indentation is not optional. Everything inside a loop must be indented consistently.
+
+
+-----------------------------------------------------------
+QUICK REFERENCE
+-----------------------------------------------------------
+
+wget URL                                 Download the file
+ls                                       Confirm the file is there
+cat enc                                  See the raw encoded contents
+python3                                  Open Python interactive shell
+dumbIThere = open("enc").read()          Read file into a variable
+decoded = ''                             Create empty output variable
+for a in dumbIThere:                     Loop through each character
+  decoded = a.encode('utf-16be').decode('ascii')   Decode each character
+  print(decoded)                         Print the result
+
+
+-----------------------------------------------------------
+THE FLAG
+-----------------------------------------------------------
+
+picoCTF{16_bits_inst34d_of_8_b7f62ca5}
+
+
+-----------------------------------------------------------
+KEY TAKEAWAYS
+-----------------------------------------------------------
+
+Not all text is ASCII. Files can be encoded in many different formats. UTF-16 stores each character as 16 bits instead of 8, which is why the file looked like random symbols when read normally.
+
+When a file looks like gibberish, that is a clue not a dead end. Think about what encoding might have been used and work backwards from there.
+
+Python is extremely powerful for encoding and decoding tasks. The encode() and decode() methods let you convert between character encodings easily.
+
+Indentation in Python is mandatory. Two spaces or one tab before code inside a loop is required or Python will throw an error.
+
+The challenge name Transformation was itself a hint. When you see that word in a CTF, think about encoding and decoding.
