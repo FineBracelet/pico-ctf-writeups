@@ -1,0 +1,135 @@
+CTF Writeup: Text Transformations
+picoCTF | Linux Text Transformations Challenge
+Author: Yahaya Meddy
+
+
+-----------------------------------------------------------
+WHAT WAS THIS CHALLENGE?
+-----------------------------------------------------------
+
+The challenge asked us to connect to a remote server using nc (netcat) and reverse a series of Linux text transformations step by step. At each step, the server showed a transformed version of the flag along with a hint. We had to enter the correct Linux command to undo each transformation.
+
+Connection command used:
+nc foggy-cliff.picoctf.net 55685
+
+nc stands for netcat. Think of it like a telephone to a remote server. It connects your terminal to it and lets you communicate directly. Whatever the server sends, you see in your terminal.
+
+
+-----------------------------------------------------------
+STEP 1 - Base64 Decode
+-----------------------------------------------------------
+
+Hint given: Base64 encoded the string.
+
+Command entered: base64 -d
+
+What happened:
+Base64 is an encoding method that converts data into a string of letters, numbers, and symbols. It is commonly used to safely transmit data. The encoded string looks like a long random mix of characters.
+
+Why this command:
+To reverse Base64, you use the base64 command with the -d flag. The d stands for decode. The server already holds the encoded string, so you only need to provide the command itself.
+
+Remember: base64 -d decodes. base64 with no flag encodes.
+
+
+-----------------------------------------------------------
+STEP 2 - Reverse the Text
+-----------------------------------------------------------
+
+Hint given: Reversed the text.
+
+Command entered: rev
+
+What happened:
+The text was flipped backwards, like reading a sentence from right to left. For example hello becomes olleh.
+
+Why this command:
+rev is a Linux command that reverses each line of text character by character. Since the transformation was reversing, applying rev again brings it back to the original.
+
+Remember: rev reverses text character by character, line by line.
+
+
+-----------------------------------------------------------
+STEP 3 - Swap Dashes Back to Underscores
+-----------------------------------------------------------
+
+Hint given: Replaced underscores with dashes.
+
+Command entered: tr '-' '_'
+
+What happened:
+Every underscore in the original flag was replaced with a dash. So something like flag_name became flag-name.
+
+Why this command:
+tr stands for translate. It replaces characters. The syntax is tr 'old' 'new' and it maps each character in old to the matching one in new. Here we swap the dash back to an underscore.
+
+Remember: tr 'a' 'b' replaces every occurrence of a with b in the input.
+
+
+-----------------------------------------------------------
+STEP 4 - Swap Parentheses Back to Curly Braces
+-----------------------------------------------------------
+
+Hint given: Replaced curly braces with parentheses.
+
+Command entered: tr '()' '{}'
+
+What happened:
+The curly braces that wrap the flag content were changed to parentheses. So picoCTF{flag} became picoCTF(flag).
+
+Why this command:
+tr can handle multiple character pairs at once. tr '()' '{}' maps open parenthesis to open curly brace and close parenthesis to close curly brace at the same time. The positions must match between the two sets.
+
+Remember: tr handles multiple character pairs simultaneously. Position matters.
+
+
+-----------------------------------------------------------
+STEP 5 - Reverse ROT13
+-----------------------------------------------------------
+
+Hint given: Applied ROT13 to letters.
+
+Command entered: tr 'A-Za-z' 'N-ZA-Mn-za-m'
+
+What happened:
+ROT13 shifts every letter 13 positions forward in the alphabet. A becomes N, B becomes O, and so on. It is a simple substitution cipher. Because the alphabet has 26 letters, applying ROT13 twice always gets you back to the original.
+
+Why this command:
+Since ROT13 is its own inverse, you reverse it by applying the exact same transformation again. The tr command maps each letter range to its ROT13 equivalent. A through Z gets mapped to N through Z then A through M, doing the shift of 13.
+
+Remember: ROT13 is self-reversing. Apply it once to encode, apply it again to decode.
+
+
+-----------------------------------------------------------
+QUICK REFERENCE
+-----------------------------------------------------------
+
+Step 1   base64 -d              Decodes Base64 encoded text
+Step 2   rev                    Reverses text character by character
+Step 3   tr '-' '_'             Swaps dashes back to underscores
+Step 4   tr '()' '{}'           Swaps parentheses back to curly braces
+Step 5   tr 'A-Za-z' 'N-ZA-Mn-za-m'   Reverses ROT13 substitution
+
+
+-----------------------------------------------------------
+THE FLAG
+-----------------------------------------------------------
+
+picoCTF{Revers1ng_t3xt_Tr4nsf0rm@t10ns_aa00e8fb}
+
+
+-----------------------------------------------------------
+KEY TAKEAWAYS
+-----------------------------------------------------------
+
+nc connects your terminal to a remote server. You will use this constantly in CTF challenges.
+
+base64 -d is one of the most common decodings you will encounter in CTFs. Learn to recognise Base64 encoded strings by their appearance.
+
+rev is a simple but useful tool. Reversed text shows up in beginner challenges fairly often.
+
+tr is extremely powerful. It handles character-by-character substitution and can process multiple pairs at once.
+
+ROT13 is self-reversing. If you see it, you do not need a different command to undo it.
+
+Always read the hint carefully. It tells you exactly what transformation was applied and points you toward the right tool.
