@@ -1,0 +1,74 @@
+CTF Writeup: File Run 2
+picoCTF | General Skills Challenge
+
+
+-----------------------------------------------------------
+WHAT WAS THIS CHALLENGE?
+-----------------------------------------------------------
+
+Similar to File Run 1, a binary executable was provided. But this time simply running it was not enough. The program required a command line argument to be passed when running it. Reading the instructions carefully revealed what argument was needed.
+
+
+-----------------------------------------------------------
+STEP 1 - Download the File
+-----------------------------------------------------------
+
+Command used: wget [file URL]
+
+What happened:
+wget downloaded the binary file into the current directory.
+
+Remember: wget URL downloads any file from the internet straight into your terminal.
+
+
+-----------------------------------------------------------
+STEP 2 - Make the File Executable
+-----------------------------------------------------------
+
+Command used: chmod +x run.1
+
+What happened:
+Just like in File Run 1, the downloaded file needed execute permission before it could be run. chmod +x grants that permission.
+
+Remember: always chmod +x a downloaded binary before trying to run it.
+
+
+-----------------------------------------------------------
+STEP 3 - Run the File With an Argument
+-----------------------------------------------------------
+
+Command used: ./run.1 Hello!
+
+What happened:
+Running ./run.1 alone did not work. The program expected an argument to be passed alongside it. The instructions specified that the argument was Hello! with a capital H and an exclamation mark. Passing the wrong case (hello! instead of Hello!) would also fail because arguments are case sensitive.
+
+A command line argument is extra information you give to a program when running it. It goes right after the filename separated by a space.
+
+Remember: ./filename argument passes information to a program when launching it. Case matters.
+
+
+-----------------------------------------------------------
+QUICK REFERENCE
+-----------------------------------------------------------
+
+wget URL               Download the file
+chmod +x run.1         Give execute permission
+./run.1 Hello!         Run the file and pass the required argument
+
+
+-----------------------------------------------------------
+THE FLAG
+-----------------------------------------------------------
+
+Obtained after running ./run.1 Hello! correctly.
+
+
+-----------------------------------------------------------
+KEY TAKEAWAYS
+-----------------------------------------------------------
+
+Not all programs run with just ./filename. Some require arguments passed alongside them. Always read the challenge instructions carefully for hints about what arguments are needed.
+
+Command line arguments are case sensitive. Hello! and hello! are completely different to a program.
+
+This challenge builds on File Run 1 by adding one more concept: passing arguments to executables. In real reverse engineering and CTF work you will pass arguments to programs constantly.
