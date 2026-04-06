@@ -1,0 +1,216 @@
+CTF Writeup: GDB Baby Step 3
+picoCTF | Reverse Engineering Challenge
+
+
+-----------------------------------------------------------
+WHAT WAS THIS CHALLENGE?
+-----------------------------------------------------------
+
+One binary file was provided: debugger0_c. The value 0x2262c96b is loaded into
+memory inside the main function. The goal was to examine that memory location
+byte by byte using GDB and read the four bytes exactly as they are stored. The
+flag is those four bytes combined in order with no spaces.
+
+This challenge introduces a critical concept in computer architecture: endianness.
+
+
+-----------------------------------------------------------
+STEP 0 - Download the Binary
+-----------------------------------------------------------
+
+Command used:
+wget https://artifacts.picoctf.net/c/[challenge-id]/debugger0_c
+
+Verify the file is there:
+ls
+
+Then try:
+cat debugger0_c
+
+This prints unreadable gibberish because it is a compiled binary. We need GDB
+to analyze it properly.
+
+Remember: cat is for text files. Binaries need proper tools like GDB.
+
+
+-----------------------------------------------------------
+STEP 1 - Fix Permissions
+-----------------------------------------------------------
+
+Before opening in GDB, the binary needs execute permission or it will throw
+a permission denied error when you try to run it.
+
+Command used:
+chmod +x debugger0_c
+
+Or if that fails:
+sudo chmod +x debugger0_c
+
+Remember: downloaded binaries often do not have execute permission by default.
+Always run chmod +x before trying to run or debug a binary.
+
+
+-----------------------------------------------------------
+STEP 2 - Open the Binary in GDB
+-----------------------------------------------------------
+
+Command used:
+gdb debugger0_c
+
+Then list all functions:
+(gdb) info functions
+
+This confirmed that main exists at address 0x0000000000401106.
+
+Remember: always start with info functions to get a map of the binary before
+doing anything else.
+
+
+-----------------------------------------------------------
+STEP 3 - Disassemble Main
+-----------------------------------------------------------
+
+Command used:
+(gdb) disas main
+
+Output:
+   0x0000000000401106 <+0>:    endbr64
+   0x000000000040110a <+4>:    push   %rbp
+   0x000000000040110b <+5>:    mov    %rsp,%rbp
+   0x000000000040110e <+8>:    mov    %edi,-0x14(%rbp)
+   0x0000000000401111 <+11>:   mov    %rsi,-0x20(%rbp)
+   0x0000000000401115 <+15>:   movl   $0x2262c96b,-0x4(%rbp)
+   0x000000000040111c <+22>:   mov    -0x4(%rbp),%eax
+   0x000000000040111f <+25>:   pop    %rbp
+   0x0000000000401120 <+26>:   ret
+
+The important line is:
+   movl $0x2262c96b, -0x4(%rbp)
+
+This stores the value 0x2262c96b into a local variable at -0x4(%rbp).
+The instruction right after it at address 0x40111c is where we need to pause.
+
+Remember: the movl line stores the value. The line right after it is where the
+value is already in memory and ready to be examined.
+
+
+-----------------------------------------------------------
+STEP 4 - Set a Breakpoint and Run
+-----------------------------------------------------------
+
+We need to pause the program right after the value is stored in memory.
+The instruction after the movl line is at address 0x40111c.
+
+Commands used:
+(gdb) break *0x40111c
+(gdb) run
+
+Output:
+Breakpoint 1, 0x000000000040111c in main ()
+
+The program paused exactly where we wanted. The value is now sitting in memory
+at -0x4(%rbp).
+
+Remember: breakpoints pause execution before that instruction runs. Setting it
+at 0x40111c means the movl line already ran and the value is in memory.
+
+
+-----------------------------------------------------------
+STEP 5 - Examine the Memory Byte by Byte
+-----------------------------------------------------------
+
+Command used:
+(gdb) x/4xb $rbp-0x4
+
+Output:
+0x7fffffffe1dc:   0x6b   0xc9   0x62   0x22
+
+This printed four bytes starting from the memory address where the value
+was stored. The x/4xb command means:
+    x      = examine memory
+    4      = show 4 units
+    x      = display in hex
+    b      = one byte at a time
+
+Remember: do not use square brackets around the address. Write $rbp-0x4
+not [$rbp-0x4]. Registers must use the $ prefix like $rbp not just rbp.
+
+
+-----------------------------------------------------------
+STEP 6 - Understand Endianness
+-----------------------------------------------------------
+
+The original value in the code was 0x2262c96b.
+But the bytes in memory came out as: 0x6b 0xc9 0x62 0x22
+
+Notice they are in reverse order compared to the original value. This is
+because x86 processors use little-endian storage. Little-endian means the
+smallest (least significant) byte is stored first in memory.
+
+So 0x2262c96b gets stored in memory as:
+    Address +0:   0x6b   (least significant byte first)
+    Address +1:   0xc9
+    Address +2:   0x62
+    Address +3:   0x22   (most significant byte last)
+
+The challenge says the flag is the bytes exactly as they appear in memory.
+The example given was: if you see 0x11 0x22 0x33 0x44, the flag is
+picoCTF{0x11223344}. So we just read them left to right as printed.
+
+Remember: do not reverse the bytes. The flag uses the memory order, not the
+original value order. Little-endian is why they look backwards compared to
+what was written in the source.
+
+
+-----------------------------------------------------------
+STEP 7 - Build the Flag
+-----------------------------------------------------------
+
+Bytes in memory in order:
+0x6b   0xc9   0x62   0x22
+
+Combined with no spaces:
+0x6bc96222
+
+Remember: concatenate the bytes exactly as printed, left to right, dropping
+the individual 0x prefixes and adding one 0x at the front.
+
+
+-----------------------------------------------------------
+QUICK REFERENCE
+-----------------------------------------------------------
+
+wget URL                         Download the binary
+chmod +x filename                Give the binary execute permission
+gdb filename                     Open in GDB
+info functions                   List all functions
+disas main                       Disassemble main function
+break *0xADDRESS                 Set breakpoint at an address
+run                              Run the program until breakpoint hits
+x/4xb $rbp-0x4                  Examine 4 bytes at memory address
+
+
+-----------------------------------------------------------
+THE FLAG
+-----------------------------------------------------------
+
+picoCTF{0x6bc96222}
+
+
+-----------------------------------------------------------
+KEY TAKEAWAYS
+-----------------------------------------------------------
+
+Endianness matters. x86 is little-endian which means bytes are stored in
+memory in reverse order compared to how we write them. This is one of the
+most important concepts in reverse engineering and binary exploitation.
+
+The x/4xb command is essential for reading raw memory. It lets you see
+exactly what is sitting at any address byte by byte.
+
+Breakpoints are how you pause a program at the right moment. Setting one
+right after a memory store lets you inspect the value before anything else
+changes it.
+
+Always read the challenge description carefully. This one told you exactly
+which command to use and exactly how to format the flag.
