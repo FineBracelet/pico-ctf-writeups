@@ -1,0 +1,143 @@
+CTF Writeup: GDB Baby Step 4
+picoCTF | Reverse Engineering | Medium | x86_64
+
+
+-----------------------------------------------------------
+WHAT WAS THIS CHALLENGE?
+-----------------------------------------------------------
+
+A compiled binary was provided. main calls a function that multiplies eax by a constant. The goal was to find that constant and submit it in decimal as the flag.
+
+Example given in the description: if the constant is 0x1000, the flag is picoCTF{4096}.
+
+
+-----------------------------------------------------------
+BACKGROUND - WHAT IS eax?
+-----------------------------------------------------------
+
+The CPU has small, ultra-fast storage slots built directly into the processor called registers. Unlike RAM, which is external to the CPU, registers sit inside it, making them the fastest place to store and retrieve data during computation.
+
+eax is one of these registers. It is 32 bits wide and belongs to the general purpose register family. Historically it is called the accumulator register, and it is commonly used for storing the results of arithmetic operations like multiplication, holding return values from functions, and acting as the working register for math-heavy instructions.
+
+When a function multiplies a value by a constant, the result typically lands back in eax.
+
+
+-----------------------------------------------------------
+BACKGROUND - WHAT IS AN IMMEDIATE VALUE?
+-----------------------------------------------------------
+
+In x86_64 assembly, a multiplication instruction looks like this:
+
+    imul eax, 0x1234
+
+This means: take whatever is in eax, multiply it by 0x1234, and store the result back in eax.
+
+The number 0x1234 sitting directly in the instruction is called an immediate value. It is a constant baked into the instruction itself. It does not come from memory or another register. It is hardcoded.
+
+That hardcoded constant is exactly what the challenge asks for.
+
+
+-----------------------------------------------------------
+STEP 1 - Download and Open the Binary
+-----------------------------------------------------------
+
+    wget <challenge_url>
+    gdb debugger0_d
+
+Remember: always load the binary into GDB before doing anything else. GDB is the environment where all analysis happens.
+
+
+-----------------------------------------------------------
+STEP 2 - List All Functions
+-----------------------------------------------------------
+
+Command used:
+
+    info functions
+
+This printed a list of all defined functions in the binary including func1 and main.
+
+Remember: info functions gives you the map of what exists in the binary. Always run it first to understand what you are working with.
+
+
+-----------------------------------------------------------
+STEP 3 - Disassemble main
+-----------------------------------------------------------
+
+Command used:
+
+    disas main
+
+Inside the output, one line stood out:
+
+    call  0x401106 <func1>
+
+main is calling func1. That is the function doing the multiplication. Follow the call.
+
+Remember: when you see a call instruction in assembly, that is the program jumping to another function. Whatever that function does is relevant to the challenge.
+
+
+-----------------------------------------------------------
+STEP 4 - Disassemble func1
+-----------------------------------------------------------
+
+Command used:
+
+    disas func1
+
+Inside the disassembly, the imul instruction appeared with a constant next to it:
+
+    imul eax, 0x3269
+
+The constant is 0x3269.
+
+Remember: imul is the integer multiply instruction. The second operand is the immediate value, the constant baked directly into the instruction. That is what you are looking for.
+
+
+-----------------------------------------------------------
+STEP 5 - Convert Hex to Decimal
+-----------------------------------------------------------
+
+The flag requires the constant in decimal. GDB can handle this conversion directly.
+
+Command used:
+
+    p/d 0x3269
+
+Important: do not use $ before the hex value. The $ prefix in GDB refers to registers or previous results, not raw numbers.
+
+Output:
+
+    $1 = 12905
+
+Remember: p/d means print in decimal. GDB handles number base conversions natively. No external calculator needed.
+
+
+-----------------------------------------------------------
+THE FLAG
+-----------------------------------------------------------
+
+picoCTF{12905}
+
+
+-----------------------------------------------------------
+KEY TAKEAWAYS
+-----------------------------------------------------------
+
+Registers are the CPU's working memory. They sit inside the processor itself, making them faster than RAM. eax is the accumulator and commonly holds arithmetic results.
+
+Immediate values are constants baked into instructions. When you see imul eax, 0x3269, the 0x3269 is not coming from memory. It is part of the instruction itself.
+
+disas is your starting point for reverse engineering. Once you know which function does the work, disassemble it and read the instructions line by line.
+
+p/d converts hex to decimal inside GDB. Learn GDB's built-in tools, they save time.
+
+
+-----------------------------------------------------------
+COMMANDS REFERENCE
+-----------------------------------------------------------
+
+gdb <binary>          Open binary in GDB
+info functions        List all defined functions
+disas <function>      Disassemble a function by name
+p/d 0xVALUE          Print a hex value in decimal
