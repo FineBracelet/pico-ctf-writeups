@@ -1,0 +1,173 @@
+CTF Writeup: GDB Baby Step 2
+picoCTF | Reverse Engineering Challenge
+
+
+-----------------------------------------------------------
+WHAT WAS THIS CHALLENGE?
+-----------------------------------------------------------
+
+One binary file was provided: debugger0_b. The goal was to figure out what value
+is stored in the eax register at the end of the main function and submit it as
+a decimal number in the picoCTF flag format. No source code was given. GDB was
+used to read and understand the compiled assembly.
+
+
+-----------------------------------------------------------
+STEP 1 - Download the Binary
+-----------------------------------------------------------
+
+Command used:
+wget https://artifacts.picoctf.net/c/520/debugger0_b
+
+What happened:
+The binary was downloaded into the current directory. Running ls confirmed it was
+present. Running cat debugger0_b printed unreadable gibberish because it is a
+compiled binary and not a text file. This confirmed that a proper debugger was
+needed to analyze it.
+
+Remember: cat works for text files. For binaries you need tools like GDB, objdump,
+or Ghidra to make sense of the contents.
+
+
+-----------------------------------------------------------
+STEP 2 - Open the Binary in GDB
+-----------------------------------------------------------
+
+Command used:
+gdb debugger0_b
+
+What happened:
+GDB loaded the binary and showed that no debugging symbols were found. This is
+normal for compiled binaries without debug info. It just means function and
+variable names will not be shown automatically, but we can still disassemble.
+
+Running info functions inside GDB listed all known functions and confirmed that
+main exists at address 0x0000000000401106.
+
+Remember: info functions is a good first command in GDB. It gives you a map of
+where functions are so you know what to look at.
+
+
+-----------------------------------------------------------
+STEP 3 - Disassemble Main
+-----------------------------------------------------------
+
+Command used inside GDB:
+disas main
+
+What happened:
+GDB printed the full assembly of the main function. The important lines were:
+
+   movl   $0x1e0da, -0x4(%rbp)     stores first value into variable a
+   movl   $0x25f,   -0xc(%rbp)     stores second value into variable b
+   movl   $0x0,     -0x8(%rbp)     stores zero into variable i (loop counter)
+   jmp    main+48                   jumps to loop condition first
+   mov    -0x8(%rbp), %eax         loads i into eax
+   add    %eax, -0x4(%rbp)         adds i to a
+   addl   $0x1, -0x8(%rbp)         increments i by 1
+   mov    -0x8(%rbp), %eax         loads i into eax again
+   cmp    -0xc(%rbp), %eax         compares i with b
+   jl     main+38                   jumps back if i is less than b
+   mov    -0x4(%rbp), %eax         loads final value of a into eax
+   ret                              returns, eax holds the answer
+
+Remember: assembly reads from bottom to top for context but from top to bottom
+for execution. The movl lines at the top always set up the starting values.
+
+
+-----------------------------------------------------------
+STEP 4 - Convert Hex Values to Decimal
+-----------------------------------------------------------
+
+Commands used inside GDB:
+p/d 0x1e0da     =>   123098
+p/d 0x25f       =>   607
+p/d 0x0         =>   0
+
+What happened:
+The three hex values from the movl lines were converted to decimal. These are the
+starting values of the three local variables used in the loop.
+
+Remember: p/d in GDB prints a value in decimal. p/x prints in hex. Use these to
+convert values quickly without doing the math manually.
+
+
+-----------------------------------------------------------
+STEP 5 - Reconstruct the Logic
+-----------------------------------------------------------
+
+Reading the assembly, the code maps to this equivalent C program:
+
+    int a = 123098;
+    int b = 607;
+    int i = 0;
+
+    while (i < b) {
+        a = a + i;
+        i = i + 1;
+    }
+
+    return a;
+
+The loop runs 607 times, adding the current value of i to a each iteration.
+This means the loop computes: a = 123098 + 0 + 1 + 2 + ... + 606
+
+Remember: a while loop in assembly always follows the same pattern. A counter
+variable, an increment line, a compare line, and a conditional jump back.
+
+
+-----------------------------------------------------------
+STEP 6 - Calculate the Result
+-----------------------------------------------------------
+
+Using the sum formula for consecutive integers from 0 to n:
+
+    sum = n x (n + 1) / 2
+        = 606 x 607 / 2
+        = 183921
+
+Adding the base value:
+
+    123098 + 183921 = 307019
+
+This is the final value stored in eax when main returns.
+
+Remember: when you see a loop that adds an incrementing counter to a variable,
+the sum formula n x (n+1) / 2 lets you calculate the result instantly without
+simulating every iteration.
+
+
+-----------------------------------------------------------
+QUICK REFERENCE
+-----------------------------------------------------------
+
+wget URL                     Download the binary file
+cat filename                 Confirm it is a binary (will print gibberish)
+gdb filename                 Open the binary in GDB
+info functions               List all known functions and their addresses
+disas main                   Disassemble the main function
+p/d 0xVALUE                  Convert hex to decimal inside GDB
+
+
+-----------------------------------------------------------
+THE FLAG
+-----------------------------------------------------------
+
+picoCTF{307019}
+
+
+-----------------------------------------------------------
+KEY TAKEAWAYS
+-----------------------------------------------------------
+
+Assembly is just C in disguise. Once you recognize movl, add, cmp, and jl you
+can reconstruct what any program does without ever seeing the source code.
+
+The eax register holds the return value of a function. Whatever is in eax when
+ret executes is the answer the function gives back.
+
+GDB is not just for debugging crashes. It is a powerful tool for understanding
+how any compiled program works from the inside.
+
+Converting hex to decimal with p/d saves time and avoids errors. Always let the
+tool do the arithmetic when possible.
