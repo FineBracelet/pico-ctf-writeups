@@ -1,0 +1,87 @@
+picoCTF 2022 — GDB Test Drive
+
+Category  : Reverse Engineering
+Difficulty: Medium
+Tags      : binary, gdb
+Flag      : picoCTF{d3bugg3r_dr1v3_72bd8355}
+
+----------------------------------------------------------------
+
+Description
+
+Can you get the flag? Download this binary.
+
+The challenge provides a binary called gdbme and a set of GDB
+instructions to follow. The goal is to get comfortable using GDB
+as a debugger to extract a hidden flag.
+
+----------------------------------------------------------------
+
+Tools Used
+
+- GDB (GNU Debugger)
+- Kali Linux
+
+----------------------------------------------------------------
+
+Solution
+
+Step 1 — Make the binary executable
+
+    chmod +x gdbme
+
+Step 2 — Open the binary in GDB
+
+    gdb gdbme
+
+Step 3 — Switch to assembly layout
+
+    (gdb) layout asm
+
+This opens a TUI view showing the disassembled instructions,
+making it easier to follow the program's control flow.
+
+Step 4 — Set a breakpoint
+
+    (gdb) break *(main+99)
+
+This sets a breakpoint at offset 99 inside main, pausing
+execution right before a critical instruction.
+
+Step 5 — Run the program
+
+    (gdb) run
+
+The program hits the breakpoint and pauses at main+99.
+
+Step 6 — Jump over the check
+
+    (gdb) jump *(main+104)
+
+This jumps execution forward to main+104, skipping the
+instructions between offsets 99 and 104.
+
+----------------------------------------------------------------
+
+What Actually Happened?
+
+Between main+99 and main+104 sits a conditional jump — the
+binary equivalent of an if statement. In normal execution, this
+check would evaluate to false and redirect control flow away
+from the flag-printing code.
+
+By using jump, we manually redirected the instruction pointer
+past that check, landing directly in the code path that prints
+the flag — as if the condition had passed.
+
+This is a classic technique in reverse engineering: instead of
+figuring out what the correct input is, you bypass the check
+entirely.
+
+----------------------------------------------------------------
+
+Flag
+
+picoCTF{d3bugg3r_dr1v3_72bd8355}
+
+----------------------------------------------------------------
