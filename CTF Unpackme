@@ -1,0 +1,122 @@
+picoCTF 2022 — unpackme
+
+Category  : Reverse Engineering
+Difficulty: Medium
+Tags      : binary, packed, upx, gdb
+Flag      : picoCTF{up><_m3_f7w_77ad107e}
+
+----------------------------------------------------------------
+
+Objective
+
+Reverse engineer a UPX-packed binary to extract a hidden flag
+by finding the hardcoded comparison value inside the program.
+
+Tools Used
+
+- Terminal (Kali Linux)
+- UPX (Ultimate Packer for Executables)
+- GDB (GNU Debugger)
+- wget
+
+----------------------------------------------------------------
+
+Step 1: Downloading the Binary
+
+    wget <binary_url>
+
+The hint on the challenge page reads "What is UPX?" — a strong
+signal that the binary has been compressed using UPX, a tool
+that packs executables to reduce size and obscure their contents.
+
+----------------------------------------------------------------
+
+Step 2: Unpacking with UPX
+
+Before we can analyze the binary, we need to unpack it. UPX
+includes a built-in decompression flag for this:
+
+    upx -d unpackme-upx
+
+Output confirms success:
+
+    Unpacked 1 file.
+
+The binary expanded from 379188 bytes to 1006445 bytes — its
+original uncompressed size. The contents are now readable.
+
+----------------------------------------------------------------
+
+Step 3: Making the Binary Executable and Running It
+
+    chmod +x unpackme-upx
+    ./unpackme-upx
+
+The binary prompts us:
+
+    What's my favorite number?
+
+Entering a random number returns:
+
+    Sorry, that's not it!
+
+So the program checks our input against a hardcoded value. We
+need to find that value.
+
+----------------------------------------------------------------
+
+Step 4: Finding the Hidden Comparison in GDB
+
+We open the binary in GDB and disassemble main to inspect the
+assembly instructions:
+
+    gdb ./unpackme-upx
+    (gdb) disassemble main
+
+Scanning through the output, we find the critical line at
+offset +133:
+
+    cmp    $0xb83cb, %eax
+
+This is where the program compares our input (stored in eax)
+against the hardcoded value 0xb83cb.
+
+We convert the hex value to decimal inside GDB:
+
+    (gdb) p/d 0xb83cb
+
+Result:
+
+    $1 = 754635
+
+----------------------------------------------------------------
+
+Step 5: Entering the Correct Number
+
+We run the binary and enter our answer:
+
+    ./unpackme-upx
+    What's my favorite number? 754635
+
+The program accepts it and prints the flag.
+
+----------------------------------------------------------------
+
+Key Takeaway
+
+The binary was packed with UPX to hide its contents. After
+unpacking it, we used GDB to disassemble main and locate a
+cmp instruction that revealed the hardcoded number the program
+checks against. Converting that hex value to decimal gave us
+the correct input without any guessing.
+
+This technique — finding comparison values in assembly — is one
+of the most fundamental skills in binary reverse engineering.
+
+----------------------------------------------------------------
+
+Flag
+
+picoCTF{up><_m3_f7w_77ad107e}
+
+----------------------------------------------------------------
